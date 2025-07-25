@@ -113,6 +113,17 @@ def copy_sdl_dll(sdl_platform):
     except Exception as e:
         print(f"Unexpected error: {e}")
         
+def get_architecture():
+    arch = platform.machine().lower()
+    if 'arm' in arch:
+        return 'ARM'
+    elif 'x86_64' in arch or 'amd64' in arch:
+        return 'x64'
+    elif 'i386' in arch or 'i686' in arch:
+        return 'x86'
+    else:
+        return f'Unknown ({arch})'
+    
 def build_main():
     src = [
         "src/main.cpp",
@@ -123,14 +134,17 @@ def build_main():
         "vendors/imgui/backends/imgui_impl_sdl3.cpp",
         "vendors/imgui/backends/imgui_impl_sdlrenderer3.cpp",  # your SDL3 backend here
     ]
-
     includes = [
         "-Ivendors/imgui",
         "-Ivendors/imgui/backends",
         "-Ivendors/sdl/include",
     ]
-
     platform_flags = []
+    system = platform.system()
+    machine = platform.machine().lower()
+
+
+    
     if platform.system() == "Linux":
         platform_flags += ["-lSDL3", "-lGL"]
         copy_sdl_dll("x64")
@@ -141,15 +155,22 @@ def build_main():
                            "OpenGL"]
         copy_sdl_dll("x64")
     elif platform.system() == "Windows":
+        if "arm" in machine:
+            sdl_arch = "arm64"
+        else:
+            sdl_arch = "x64"
+
         platform_flags += [
-            "-Lvendors/sdl/lib/arm64", # change this line for x64 
+            f"-Lvendors/sdl/lib/{sdl_arch}",
             "-lSDL3",
             "-lopengl32"
         ]
-        copy_sdl_dll("arm64")
+        copy_sdl_dll(sdl_arch)
+
+
+        
     Path("build").mkdir(exist_ok=True)
 
-    #os.replace(Path("vendors/),)
     cmd = ["g++", "-std=c++17", "-O2"] + src + includes + platform_flags + ["-o", "build/app"]
     print("Building:\n", " ".join(cmd))
     try:
@@ -157,6 +178,7 @@ def build_main():
     except:
         print("error")
     print("Build complete: run `build/app.exe`")
+    subprocess.run("cd build && dir")
     
     
 def main():
