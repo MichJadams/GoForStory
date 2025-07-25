@@ -2,9 +2,9 @@ name: Cross-platform Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -37,12 +37,13 @@ jobs:
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
           choco install mingw -y
         shell: powershell
+
       - name: Install GCC on Windows
-	if: runner.os == 'Windows'
-	uses: egor-tensin/setup-gcc@v1
-	with:
-	version: latest
-	platform: x64
+        if: runner.os == 'Windows'
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: latest
+          platform: x64
 
       - name: Run Python build script
         run: python build.py
@@ -51,5 +52,3 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ runner.os }}-binary
-          path: |
-            build/**/*
