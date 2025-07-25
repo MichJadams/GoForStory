@@ -96,7 +96,23 @@ def setup_imgui():
         shutil.rmtree(extracted_folder)
 
     print(f"ImGui setup complete in {IMGUI_VENDOR_DIR}")
+    
+def copy_sdl_dll(sdl_platform):
+    src = Path(f"vendors/sdl/lib/{sdl_platform}/SDL3.dll")
+    dst_dir = Path("build")
+    dst = dst_dir / src.name
 
+    # Create the destination directory if it doesn't exist
+    dst_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        shutil.copy2(src, dst)
+        print(f"Copied {src} → {dst}")
+    except FileNotFoundError:
+        print(f"Error: Source file {src} not found.")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        
 def build_main():
     src = [
         "src/main.cpp",
@@ -117,18 +133,20 @@ def build_main():
     platform_flags = []
     if platform.system() == "Linux":
         platform_flags += ["-lSDL3", "-lGL"]
+        copy_sdl_dll("x64")
     elif platform.system() == "Darwin":
         platform_flags += ["-L/opt/homebrew/lib",
                            "-I/opt/homebrew/include",
                            "-lSDL3", "-framework",
                            "OpenGL"]
+        copy_sdl_dll("x64")
     elif platform.system() == "Windows":
         platform_flags += [
             "-Lvendors/sdl/lib/arm64", # change this line for x64 
             "-lSDL3",
             "-lopengl32"
         ]
-
+        copy_sdl_dll("arm64")
     Path("build").mkdir(exist_ok=True)
 
     #os.replace(Path("vendors/),)
@@ -138,7 +156,7 @@ def build_main():
         subprocess.run(cmd, check=True)
     except:
         print("error")
-    print("Build complete: run `build/app`")
+    print("Build complete: run `build/app.exe`")
     
     
 def main():
